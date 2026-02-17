@@ -9,6 +9,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# This is actually a whole security issue in itself! I know that claude has its own installer now, but this is still the standard.
 RUN npm install -g @anthropic-ai/claude-code
 
 VOLUME /root/.claude
