@@ -14,7 +14,7 @@ docker run -it -v "$(pwd):/workspace" claude
 * acceptEdits was set to true (half pass).
   - [Claude is not allowed to edit/write files?!](claude/create-file-with-file-edit-dissalowed.md)
 
-* acceptEdits was of here
+* acceptEdits off
   - [Claude is not allowed to write file 2](claude/claude-cannot-write-file-2.md)
 
 ### Some interesting responses
