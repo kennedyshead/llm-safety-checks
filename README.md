@@ -110,7 +110,7 @@ docker run -it -v "$(pwd):/workspace" claude
 ```
 
 And I showed claude our findings:
-```bash
+```
 ● Fetch(https://github.com/kennedyshead/llm-safety-checks/blob/main/README.md)
   ⎿  Received 200.7KB (200 OK)
 
