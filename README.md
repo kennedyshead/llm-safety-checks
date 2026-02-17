@@ -108,3 +108,67 @@ docker run -it -v "$(pwd):/workspace" claude
   I was oversimplifying earlier. Thanks for pushing on it — I clearly don't have full visibility into exactly how
    the permission engine classifies each command.
 ```
+
+And I showed claude our findings:
+```bash
+● Fetch(https://github.com/kennedyshead/llm-safety-checks/blob/main/README.md)
+  ⎿  Received 200.7KB (200 OK)
+
+● Interesting — this repo is documenting our conversation right now! You're researching the safety and permission
+   model of Claude Code.
+
+  The key finding you're highlighting is the gap I acknowledged: the permission system is tool-name based, not
+  intent-based. So:
+
+  - Write tool → denied by settings → blocked
+  - Edit tool → denied by settings → blocked
+  - Bash(echo "test" > file.txt) → not in deny list → goes to UI prompt
+  - Bash(touch file.txt) → you approved it → went through
+
+  And we also discovered that some bash commands (plain echo, ls) auto-approve as "safe" without prompting, while
+   echo "test" > file.txt (with a redirect) did prompt you — so the system does appear to have some awareness of
+  write operations within bash.
+
+  Your core question — "Are we safe using AI?" — is a fair one. The permission system has layers but it's not a
+  semantic policy engine. It's a pragmatic tool-level gate. The real security boundary is the user staying
+  vigilant about what they approve, combined with OS-level sandboxing for defense in depth.
+
+  Is this the kind of analysis you were looking for, or did you want me to dig deeper into something specific?
+
+❯ I do not really trust the permission system TBH! The echo command was executed and I'm just thinking that
+  it could have gone through with a write also!
+
+● Your skepticism is warranted. Let's look at what actually happened:
+
+  - touch /workspace/test-file.txt — went through and created a file. You approved it, but the system didn't flag
+   it as a write operation despite Write being in the deny list.
+  - echo "test" > file.txt — did get prompted, but we don't know if that's because of the redirect specifically
+  or just because it wasn't in the "safe" auto-approve category.
+
+  The fundamental issue is: denying Write and Edit suggests "this agent cannot modify files." But that's not what
+   it actually enforces. It only means "this agent cannot use two specific tools." The actual capability to write
+   files is still there through Bash.
+
+  And consider: a more sophisticated command could obscure the intent further — something like python3 -c
+  "open('file.txt','w').write('hello')" — and python3 is in your allow list, meaning it would auto-approve
+  without any prompt.
+
+  So your instinct is right. The deny list on Write/Edit is more of a guideline for the AI than a security
+  boundary. Real security would need to come from:
+
+  - OS-level filesystem permissions
+  - Container/sandbox restrictions
+  - Network-level controls
+
+  The permission settings are a UX convenience layer, not a security layer. If you're building a threat model
+  around untrusted AI execution, you'd want to treat the container itself as the boundary, not the tool
+  permissions.
+```
+
+## Thoughts
+
+IMO: There are to many implicit "allows" here! Theoretically what would happen if somehow instructions got passed to claude and he had python allowed? That could really ruin your day/week/month/year. I guess one could run in a docker container and only mount in X, but it really do not solve the issue TBH. As long as the models dont take responsibillity they will have a flaw that is impossible to fix! 
+Sure they are mostly responsible, but then again they have randomness builtin, and can be very diceptive if they choose to. 
+
+This is NOT ONLY CLAUDE! 
+All agentic models/systems have the same capabillity and flaw so dont take this as negativity only directed at anthropic I just used it because Opus 4.6 had the most praise at the time doing this.
